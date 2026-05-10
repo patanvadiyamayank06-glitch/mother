@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Happy Mother's Day 💖</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink-light: #ffd6e7;
+      --pink-mid:   #ffb3d1;
+      --pink-deep:  #ff6fa8;
+      --rose:       #e91e8c;
+      --gold:       #ffd700;
+      --glass-bg:   rgba(255,255,255,0.18);
+      --glass-border: rgba(255,255,255,0.45);
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Georgia', serif;
+      background: linear-gradient(135deg, #ffe0f0 0%, #ffc2e0 30%, #ffaad4 60%, #ff85c0 100%);
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Floating Particles Canvas ── */
+    #particleCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Page Wrapper ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 860px;
+      padding: 40px 20px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      animation: fadeDown .9s ease both;
+    }
+    .header h1 {
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      color: #fff;
+      text-shadow: 0 2px 18px rgba(233,30,140,.45);
+      letter-spacing: 2px;
+    }
+    .header p {
+      margin-top: 8px;
+      font-size: clamp(.95rem, 2.5vw, 1.15rem);
+      color: rgba(255,255,255,.85);
+      letter-spacing: 1px;
+    }
+
+    /* ── Gift Box ── */
+    .gift-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      animation: fadeUp .9s .3s ease both;
+    }
+    .gift-hint {
+      font-size: .95rem;
+      color: rgba(255,255,255,.8);
+      letter-spacing: 1px;
+      animation: pulse 2s infinite;
+    }
+
+    .gift-box {
+      width: 160px; height: 160px;
+      cursor: pointer;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform .3s;
+      filter: drop-shadow(0 8px 24px rgba(233,30,140,.4));
+    }
+    .gift-box:hover { transform: scale(1.07) rotate(-3deg); }
+    .gift-box.opened { animation: openBox .7s ease forwards; }
+
+    /* SVG gift drawn inline via CSS shapes */
+    .gift-svg { width: 100%; height: 100%; }
+
+    /* ── Reveal Section ── */
+    .reveal-section {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      width: 100%;
+      animation: fadeUp .8s ease both;
+    }
+    .reveal-section.visible { display: flex; }
+
+    /* ── Photo Frame ── */
+    .photo-frame {
+      position: relative;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 4px solid var(--glass-border);
+      box-shadow: 0 8px 32px rgba(233,30,140,.3), inset 0 0 0 6px rgba(255,255,255,.25);
+      overflow: hidden;
+      animation: popIn .6s .1s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    .photo-frame img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .photo-frame .photo-placeholder {
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--rose);
+      font-size: .85rem;
+      text-align: center;
+      padding: 16px;
+      gap: 8px;
+    }
+    .photo-frame .photo-placeholder span { font-size: 3rem; }
+    .photo-frame-ring {
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      border: 3px dashed rgba(255,107,170,.5);
+      animation: spin 12s linear infinite;
+      pointer-events: none;
+    }
+
+    /* ── Letter Card ── */
+    .letter-card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border: 1.5px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 36px 32px;
+      box-shadow: 0 8px 40px rgba(233,30,140,.18);
+      animation: slideUp .7s .2s ease both;
+    }
+    .letter-card h2 {
+      font-size: 1.3rem;
+      color: var(--rose);
+      margin-bottom: 18px;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    .letter-text {
+      font-size: 1.05rem;
+      line-height: 1.85;
+      color: #5a1a3a;
+      min-height: 80px;
+    }
+    .cursor {
+      display: inline-block;
+      width: 2px; height: 1.1em;
+      background: var(--rose);
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: blink .7s step-end infinite;
+    }
+    .letter-signature {
+      margin-top: 20px;
+      text-align: right;
+      font-style: italic;
+      color: var(--rose);
+      font-size: .95rem;
+      opacity: 0;
+      transition: opacity .6s;
+    }
+    .letter-signature.show { opacity: 1; }
+
+    /* ── Memory Buttons ── */
+    .memories-section {
+      width: 100%;
+      max-width: 560px;
+      animation: fadeUp .8s .4s ease both;
+    }
+    .memories-section h3 {
+      text-align: center;
+      color: #fff;
+      font-size: 1.15rem;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 8px rgba(233,30,140,.3);
+    }
+    .memory-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+    .mem-btn {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 1.5px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 10px 22px;
+      font-size: .9rem;
+      color: #fff;
+      cursor: pointer;
+      transition: all .25s;
+      box-shadow: 0 4px 16px rgba(233,30,140,.15);
+      font-family: inherit;
+    }
+    .mem-btn:hover {
+      background: rgba(255,255,255,.32);
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 8px 24px rgba(233,30,140,.3);
+    }
+
+    /* ── Memory Popup ── */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(80,0,40,.55);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn .3s ease;
+    }
+    .popup-overlay.active { display: flex; }
+    .popup-card {
+      background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(255,210,235,.92));
+      border-radius: 24px;
+      padding: 36px 32px;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 16px 60px rgba(233,30,140,.35);
+      animation: popIn .4s cubic-bezier(.34,1.56,.64,1) both;
+      position: relative;
+    }
+    .popup-card .popup-emoji { font-size: 3.5rem; margin-bottom: 12px; }
+    .popup-card h3 { color: var(--rose); font-size: 1.3rem; margin-bottom: 10px; }
+    .popup-card p { color: #5a1a3a; line-height: 1.7; font-size: .97rem; }
+    .popup-close {
+      position: absolute;
+      top: 14px; right: 18px;
+      background: none; border: none;
+      font-size: 1.4rem; cursor: pointer;
+      color: var(--rose); transition: transform .2s;
+    }
+    .popup-close:hover { transform: scale(1.3) rotate(90deg); }
+
+    /* ── Final Magic Button ── */
+    .final-btn-wrap {
+      animation: fadeUp .8s .6s ease both;
+    }
+    .final-btn {
+      background: linear-gradient(135deg, var(--rose), #ff4fa0, var(--rose));
+      background-size: 200% 200%;
+      border: none;
+      border-radius: 50px;
+      padding: 16px 44px;
+      font-size: 1.1rem;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 1px;
+      box-shadow: 0 6px 28px rgba(233,30,140,.45);
+      transition: transform .25s, box-shadow .25s;
+      animation: gradientShift 3s ease infinite;
+    }
+    .final-btn:hover {
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 12px 40px rgba(233,30,140,.6);
+    }
+
+    /* ── Full-Screen Heart Explosion ── */
+    #heartScreen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #ff6fa8, #e91e8c, #ff4fa0);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 24px;
+      text-align: center;
+      padding: 40px;
+    }
+    #heartScreen.active { display: flex; animation: fadeIn .5s ease; }
+    #heartScreen h2 {
+      font-size: clamp(1.6rem, 5vw, 2.8rem);
+      color: #fff;
+      text-shadow: 0 2px 20px rgba(0,0,0,.2);
+      animation: popIn .6s .3s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    #heartScreen p {
+      font-size: clamp(1rem, 3vw, 1.3rem);
+      color: rgba(255,255,255,.9);
+      animation: popIn .6s .5s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    #heartScreen .close-heart {
+      margin-top: 20px;
+      background: rgba(255,255,255,.25);
+      border: 2px solid rgba(255,255,255,.6);
+      border-radius: 50px;
+      padding: 12px 32px;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .2s;
+      animation: popIn .6s .7s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    #heartScreen .close-heart:hover { background: rgba(255,255,255,.4); }
+    .heart-photo-frame {
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 5px solid rgba(255,255,255,.7);
+      box-shadow: 0 0 40px rgba(255,255,255,.4), 0 8px 32px rgba(0,0,0,.2);
+      animation: popIn .6s .2s cubic-bezier(.34,1.56,.64,1) both;
+      position: relative;
+      z-index: 1;
+    }
+    .heart-photo-frame img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    #heartCanvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    /* ── Keyframes ── */
+    @keyframes fadeDown  { from { opacity:0; transform:translateY(-30px); } to { opacity:1; transform:none; } }
+    @keyframes fadeUp    { from { opacity:0; transform:translateY(30px);  } to { opacity:1; transform:none; } }
+    @keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
+    @keyframes popIn     { from { opacity:0; transform:scale(.6); } to { opacity:1; transform:scale(1); } }
+    @keyframes slideUp   { from { opacity:0; transform:translateY(50px); } to { opacity:1; transform:none; } }
+    @keyframes blink     { 50% { opacity:0; } }
+    @keyframes pulse     { 0%,100%{opacity:.7;transform:scale(1);} 50%{opacity:1;transform:scale(1.05);} }
+    @keyframes spin      { to { transform:rotate(360deg); } }
+    @keyframes openBox   { 0%{transform:scale(1);} 40%{transform:scale(1.15) rotate(5deg);} 70%{transform:scale(.95);} 100%{transform:scale(1);} }
+    @keyframes gradientShift { 0%,100%{background-position:0% 50%;} 50%{background-position:100% 50%;} }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .letter-card { padding: 24px 18px; }
+      .gift-box { width: 130px; height: 130px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="particleCanvas"></canvas>
+
+<!-- ── Page ── -->
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>💖 Happy Mother's Day 💖</h1>
+    <p>A little surprise made with all my love</p>
+  </div>
+
+  <!-- Gift Box -->
+  <div class="gift-wrap">
+    <p class="gift-hint">✨ Click the gift to open ✨</p>
+    <div class="gift-box" id="giftBox" onclick="openGift()" title="Click me!">
+      <svg class="gift-svg" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <!-- Box body -->
+        <rect x="20" y="80" width="120" height="70" rx="8" fill="#ff6fa8"/>
+        <rect x="20" y="80" width="120" height="70" rx="8" fill="url(#boxGrad)"/>
+        <!-- Lid -->
+        <rect id="giftLid" x="14" y="58" width="132" height="30" rx="8" fill="#e91e8c"/>
+        <rect x="14" y="58" width="132" height="30" rx="8" fill="url(#lidGrad)"/>
+        <!-- Ribbon vertical -->
+        <rect x="72" y="58" width="16" height="92" rx="4" fill="#ffd700" opacity=".9"/>
+        <!-- Ribbon horizontal on lid -->
+        <rect x="14" y="68" width="132" height="10" rx="4" fill="#ffd700" opacity=".9"/>
+        <!-- Bow left loop -->
+        <ellipse cx="65" cy="52" rx="22" ry="13" fill="#ffd700" transform="rotate(-20 65 52)"/>
+        <!-- Bow right loop -->
+        <ellipse cx="95" cy="52" rx="22" ry="13" fill="#ffd700" transform="rotate(20 95 52)"/>
+        <!-- Bow center -->
+        <circle cx="80" cy="55" r="10" fill="#ffec6e"/>
+        <!-- Shine on lid -->
+        <ellipse cx="55" cy="66" rx="18" ry="5" fill="rgba(255,255,255,.18)" transform="rotate(-5 55 66)"/>
+        <!-- Shine on box -->
+        <ellipse cx="55" cy="100" rx="20" ry="6" fill="rgba(255,255,255,.12)" transform="rotate(-5 55 100)"/>
+        <defs>
+          <linearGradient id="boxGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(255,255,255,.15)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,.08)"/>
+          </linearGradient>
+          <linearGradient id="lidGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(255,255,255,.2)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,.1)"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Reveal Section -->
+  <div class="reveal-section" id="revealSection">
+
+    <!-- Photo Frame -->
+    <div style="position:relative;">
+      <div class="photo-frame" id="photoFrame">
+        <img src="C:\Users\MAYANK\Downloads\WhatsApp Image 2026-05-09 at 12.31.09 PM.jpeg" alt="Mom" />
+      </div>
+      <div class="photo-frame-ring"></div>
+    </div>
+
+    <!-- Letter Card -->
+    <div class="letter-card">
+      <h2>💌 A Letter From the Heart</h2>
+      <div class="letter-text" id="letterText"><span class="cursor"></span></div>
+      <div class="letter-signature" id="letterSig">— With all my love 💖</div>
+    </div>
+
+
+
+    <!-- Final Button -->
+    <div class="final-btn-wrap">
+      <button class="final-btn" onclick="showFinalMagic()">
+        💫 One Last Surprise for You 💫
+      </button>
+    </div>
+
+  </div><!-- /reveal-section -->
+</div><!-- /page -->
+
+<!-- ── Memory Popup ── -->
+<div class="popup-overlay" id="popupOverlay" onclick="closePopup(event)">
+  <div class="popup-card" id="popupCard">
+    <button class="popup-close" onclick="closePopup(null)">✕</button>
+    <div class="popup-emoji" id="popupEmoji"></div>
+    <h3 id="popupTitle"></h3>
+    <p id="popupText"></p>
+  </div>
+</div>
+
+<!-- ── Heart Screen ── -->
+<div id="heartScreen">
+  <canvas id="heartCanvas"></canvas>
+  <div class="heart-photo-frame">
+    <img src="C:\Users\MAYANK\Downloads\WhatsApp Image 2026-05-09 at 12.31.09 PM.jpeg" alt="Mom" />
+  </div>
+  <h2>💖 You Are the Best Gift in My Life 💖</h2>
+  <p>No words can ever express how much I love you, Mom.<br/>Thank you for everything. Always and forever. 🌸</p>
+  <button class="close-heart" onclick="closeHeartScreen()">🌷 Thank you, Mom 🌷</button>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   BACKGROUND PARTICLE SYSTEM (CSS-based, no canvas emoji)
+════════════════════════════════════════ */
+(function () {
+  const SYMBOLS = ['❤️','💕','✨','🌸','💖'];
+  const container = document.getElementById('particleCanvas');
+  // Hide canvas — we use DOM floaters instead
+  container.style.display = 'none';
+
+  const floatLayer = document.createElement('div');
+  floatLayer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;';
+  document.body.appendChild(floatLayer);
+
+  function spawnFloater() {
+    const el = document.createElement('span');
+    const sym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+    const x   = Math.random() * 100;
+    const dur  = 7 + Math.random() * 8;
+    const size = 14 + Math.random() * 14;
+    el.textContent = sym;
+    el.style.cssText = `
+      position:absolute;
+      left:${x}vw;
+      bottom:-40px;
+      font-size:${size}px;
+      opacity:${0.5 + Math.random() * 0.4};
+      animation: floatUp ${dur}s linear forwards;
+      will-change: transform;
+    `;
+    floatLayer.appendChild(el);
+    setTimeout(() => el.remove(), dur * 1000);
+  }
+
+  // Inject keyframe once
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes floatUp {
+      0%   { transform: translateY(0)   translateX(0); }
+      50%  { transform: translateY(-50vh) translateX(12px); }
+      100% { transform: translateY(-105vh) translateX(-8px); opacity:0; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Spawn 12 initial floaters staggered
+  for (let i = 0; i < 12; i++) {
+    setTimeout(spawnFloater, i * 400);
+  }
+  // Keep spawning at a gentle rate
+  setInterval(spawnFloater, 900);
+})();
+
+/* ════════════════════════════════════════
+   GIFT BOX OPEN
+════════════════════════════════════════ */
+let giftOpened = false;
+
+function openGift() {
+  if (giftOpened) return;
+  giftOpened = true;
+
+  const box = document.getElementById('giftBox');
+  box.classList.add('opened');
+  box.style.pointerEvents = 'none';
+
+  // Animate lid flying off
+  const lid = document.getElementById('giftLid');
+  lid.style.transition = 'transform .7s ease, opacity .7s ease';
+  lid.style.transformOrigin = '80px 58px';
+  lid.style.transform = 'translateY(-60px) rotate(-15deg)';
+  lid.style.opacity = '0';
+
+  setTimeout(() => {
+    document.getElementById('revealSection').classList.add('visible');
+    startTyping();
+  }, 700);
+}
+
+/* ════════════════════════════════════════
+   TYPING EFFECT
+════════════════════════════════════════ */
+const MESSAGE = "Dear Mom,\n\nThank you for always loving and supporting me. You are the most important person in my life.\n\nEvery hug, every smile, every sacrifice you made — I carry them all in my heart.\n\nHappy Mother's Day ❤️";
+
+function startTyping() {
+  const el = document.getElementById('letterText');
+  const sig = document.getElementById('letterSig');
+  let i = 0;
+  el.innerHTML = '<span class="cursor"></span>';
+
+  const interval = setInterval(() => {
+    if (i >= MESSAGE.length) {
+      clearInterval(interval);
+      // remove blinking cursor
+      el.querySelector('.cursor')?.remove();
+      sig.classList.add('show');
+      return;
+    }
+    const char = MESSAGE[i];
+    const cursor = el.querySelector('.cursor');
+    if (char === '\n') {
+      cursor.insertAdjacentHTML('beforebegin', '<br/>');
+    } else {
+      cursor.insertAdjacentText('beforebegin', char);
+    }
+    i++;
+  }, 38);
+}
+
+/* ════════════════════════════════════════
+   MEMORY POPUPS
+════════════════════════════════════════ */
+const memories = [
+  {
+    emoji: '🍳',
+    title: 'Morning Breakfasts',
+    text: 'Every morning you woke up early just to make sure I had a warm meal. Those breakfasts tasted like love itself.'
+  },
+  {
+    emoji: '🤗',
+    title: 'Your Warm Hugs',
+    text: 'No matter how hard the day was, your hug made everything feel okay. Your arms are my safest place in the world.'
+  },
+  {
+    emoji: '📚',
+    title: 'Bedtime Stories',
+    text: 'You read to me every night until I fell asleep. Those stories shaped my imagination and my love for dreaming big.'
+  },
+  {
+    emoji: '🌧️',
+    title: 'Rainy Day Talks',
+    text: 'On rainy days we would sit by the window and talk about everything and nothing. Those quiet moments are my treasure.'
+  },
+  {
+    emoji: '🎂',
+    title: 'Birthday Surprises',
+    text: 'You always made my birthday feel like the most magical day of the year. The cakes, the decorations, the love — unforgettable.'
+  },
+  {
+    emoji: '🌻',
+    title: 'Garden Walks',
+    text: 'Walking through the garden with you, learning the name of every flower — you taught me to find beauty in small things.'
+  }
+];
+
+function showMemory(index) {
+  const m = memories[index];
+  document.getElementById('popupEmoji').textContent = m.emoji;
+  document.getElementById('popupTitle').textContent = m.title;
+  document.getElementById('popupText').textContent  = m.text;
+  document.getElementById('popupOverlay').classList.add('active');
+}
+
+function closePopup(e) {
+  if (e === null || e.target === document.getElementById('popupOverlay')) {
+    document.getElementById('popupOverlay').classList.remove('active');
+  }
+}
+
+/* ════════════════════════════════════════
+   FINAL MAGIC — HEART EXPLOSION
+════════════════════════════════════════ */
+function showFinalMagic() {
+  const screen = document.getElementById('heartScreen');
+  screen.classList.add('active');
+  launchHeartExplosion();
+}
+
+function closeHeartScreen() {
+  document.getElementById('heartScreen').classList.remove('active');
+}
+
+function launchHeartExplosion() {
+  const canvas = document.getElementById('heartCanvas');
+  canvas.style.display = 'none'; // not used anymore
+
+  const screen = document.getElementById('heartScreen');
+  const SYMBOLS = ['❤️','💖','💗','','🌸','✨','💝','🌷'];
+
+  // Inject burst keyframe once
+  if (!document.getElementById('burstKF')) {
+    const s = document.createElement('style');
+    s.id = 'burstKF';
+    s.textContent = `
+      @keyframes burstFly {
+        0%   { transform: translate(0,0) scale(1); opacity:1; }
+        100% { transform: translate(var(--tx), var(--ty)) scale(.4); opacity:0; }
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  function burst(cx, cy, count) {
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('span');
+      const angle = Math.random() * Math.PI * 2;
+      const dist  = 80 + Math.random() * 220;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist - Math.random() * 80;
+      const size = 18 + Math.random() * 22;
+      const dur  = .9 + Math.random() * .8;
+      el.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+      el.style.cssText = `
+        position:fixed;
+        left:${cx}px; top:${cy}px;
+        font-size:${size}px;
+        pointer-events:none;
+        z-index:201;
+        --tx:${tx}px; --ty:${ty}px;
+        animation: burstFly ${dur}s ease-out forwards;
+        will-change: transform, opacity;
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), dur * 1000 + 100);
+    }
+  }
+
+  // Initial big burst from center
+  burst(window.innerWidth / 2, window.innerHeight / 2, 40);
+
+  // A few follow-up bursts at random spots
+  let count = 0;
+  const iv = setInterval(() => {
+    count++;
+    if (count > 4) { clearInterval(iv); return; }
+    burst(
+      Math.random() * window.innerWidth,
+      Math.random() * window.innerHeight * .7,
+      20
+    );
+  }, 700);
+}
+</script>
+</body>
+</html>
